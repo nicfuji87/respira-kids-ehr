@@ -1,63 +1,111 @@
-// Export barrel for primitives components
-// Auto-generated from primitives directory
+// Primitives - Nível 1
+// Componentes básicos reutilizáveis baseados em shadcn/ui
 
+// Form Components
 export { Button, buttonVariants } from "./button"
 export { Input } from "./input"
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from "./card"
-export { 
-  Dialog,
-  DialogPortal,
-  DialogOverlay,
-  DialogTrigger,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-} from "./dialog"
 export { Label } from "./label"
-export { Badge, badgeVariants } from "./badge"
-export { Alert, AlertTitle, AlertDescription } from "./alert"
-export {
-  Select,
-  SelectGroup,
-  SelectValue,
-  SelectTrigger,
-  SelectContent,
-  SelectLabel,
-  SelectItem,
-  SelectSeparator,
-  SelectScrollUpButton,
-  SelectScrollDownButton,
-} from "./select"
-export {
-  useFormField,
+export { 
   Form,
+  FormControl, 
+  FormDescription,
+  FormField,
   FormItem,
   FormLabel,
-  FormControl,
-  FormDescription,
   FormMessage,
-  FormField,
+  useFormField
 } from "./form"
-export { Avatar, AvatarImage, AvatarFallback } from "./avatar"
-export { Spinner } from "./spinner"
+
+// Layout Components
+export { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "./card"
+
+// Feedback Components
+export { Badge, badgeVariants } from "./badge"
+export { Alert, AlertDescription, AlertTitle } from "./alert"
+export { Spinner } from "./ui/spinner"
+
+// Overlay Components
+export { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from "./dialog"
 export { Modal } from "./modal"
 export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetOverlay,
+  SheetPortal,
+  SheetTitle,
+  SheetTrigger
+} from "./ui/sheet"
+
+// Navigation Components
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue
+} from "./select"
+export {
   DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuCheckboxItem,
-  DropdownMenuRadioItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuGroup,
-  DropdownMenuPortal,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuRadioGroup,
-} from "./dropdown-menu" 
+  DropdownMenuTrigger
+} from "./dropdown-menu"
+export {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "./ui/tabs"
+export {
+  Breadcrumb,
+  BreadcrumbEllipsis,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from "./ui/breadcrumb"
+
+// Media Components
+export { Avatar, AvatarFallback, AvatarImage } from "./avatar"
+
+// Types
+export type { ButtonProps } from "./button" 

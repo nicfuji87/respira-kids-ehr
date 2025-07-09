@@ -13,10 +13,10 @@ import {
   ActionCard,
   SearchInput,
   DataTable,
-  HamburgerMenu,
-  TabButton,
-  NavigationGuard,
-  BreadcrumbNav
+  MobileMenu,
+  NavigationTabs,
+  PageBreadcrumb,
+  NavigationGuard
 } from "@/components/composed"
 import { 
   Home, 
@@ -30,8 +30,6 @@ import {
 
 export const ComponentsComposed = () => {
   const [searchValue, setSearchValue] = useState("")
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState("dashboard")
   const [formData, setFormData] = useState({
     name: "",
     email: ""
@@ -86,11 +84,35 @@ export const ComponentsComposed = () => {
     { label: "Compostos", isActive: true },
   ]
 
-  const tabItems = [
-    { id: "dashboard", icon: Home, label: "Dashboard", badgeCount: 0 },
-    { id: "users", icon: Users, label: "Usuários", badgeCount: 5 },
-    { id: "calendar", icon: Calendar, label: "Agenda", badgeCount: 12 },
-    { id: "settings", icon: Settings, label: "Config", badgeCount: 0 },
+  const navigationTabs = [
+    { 
+      id: "dashboard", 
+      icon: Home, 
+      label: "Dashboard", 
+      badgeCount: 0,
+      content: <div className="p-4 bg-blue-50 rounded-md">Conteúdo do Dashboard</div>
+    },
+    { 
+      id: "users", 
+      icon: Users, 
+      label: "Usuários", 
+      badgeCount: 5,
+      content: <div className="p-4 bg-green-50 rounded-md">Lista de Usuários</div>
+    },
+    { 
+      id: "calendar", 
+      icon: Calendar, 
+      label: "Agenda", 
+      badgeCount: 12,
+      content: <div className="p-4 bg-yellow-50 rounded-md">Calendário de Eventos</div>
+    },
+    { 
+      id: "settings", 
+      icon: Settings, 
+      label: "Config", 
+      badgeCount: 0,
+      content: <div className="p-4 bg-gray-50 rounded-md">Configurações do Sistema</div>
+    },
   ]
 
   return (
@@ -100,22 +122,22 @@ export const ComponentsComposed = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-3xl text-roxo-titulo text-center">
-              🧩 Respira KIDS - Componentes Compostos
+              🧩 Respira KIDS - Componentes Compostos (shadcn)
             </CardTitle>
             <p className="text-center text-gray-600">
-              Visualização de todos os componentes compostos do sistema
+              Visualização de todos os componentes compostos baseados em shadcn/ui
             </p>
           </CardHeader>
         </Card>
 
-        {/* Breadcrumb Navigation */}
+        {/* Page Breadcrumb */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-roxo-titulo">Breadcrumb Navigation</CardTitle>
+            <CardTitle className="text-roxo-titulo">Page Breadcrumb (shadcn)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <BreadcrumbNav items={breadcrumbItems} />
-            <BreadcrumbNav items={breadcrumbItems} showHomeIcon={false} />
+            <PageBreadcrumb items={breadcrumbItems} />
+            <PageBreadcrumb items={breadcrumbItems} showHomeIcon={false} />
           </CardContent>
         </Card>
 
@@ -239,29 +261,17 @@ export const ComponentsComposed = () => {
           </CardContent>
         </Card>
 
-        {/* Tab Buttons */}
+        {/* Navigation Tabs (shadcn) */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-roxo-titulo">Tab Buttons</CardTitle>
+            <CardTitle className="text-roxo-titulo">Navigation Tabs (shadcn)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex border-b">
-              {tabItems.map((item) => (
-                <TabButton
-                  key={item.id}
-                  icon={item.icon}
-                  label={item.label}
-                  isActive={activeTab === item.id}
-                  badgeCount={item.badgeCount}
-                  onClick={() => setActiveTab(item.id)}
-                />
-              ))}
-            </div>
-            <div className="mt-4 p-4 bg-gray-50 rounded-md">
-              <p className="text-sm text-gray-600">
-                Tab ativo: <strong>{activeTab}</strong>
-              </p>
-            </div>
+            <NavigationTabs
+              tabs={navigationTabs}
+              defaultValue="dashboard"
+              onTabChange={(value) => console.log('Tab changed to:', value)}
+            />
           </CardContent>
         </Card>
 
@@ -278,21 +288,21 @@ export const ComponentsComposed = () => {
           </CardContent>
         </Card>
 
-        {/* Hamburger Menu */}
+        {/* Mobile Menu (shadcn) */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-roxo-titulo">Hamburger Menu</CardTitle>
+            <CardTitle className="text-roxo-titulo">Mobile Menu (shadcn)</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => setIsMenuOpen(true)}>
-              Abrir Menu Mobile
-            </Button>
-            <HamburgerMenu
-              isOpen={isMenuOpen}
-              onToggle={() => setIsMenuOpen(false)}
-              onNavigate={(route) => console.log('Navegar para:', route)}
-              userRole="admin"
-            />
+            <div className="flex items-center gap-4">
+              <MobileMenu
+                userRole="admin"
+                onNavigate={(route) => console.log('Navegar para:', route)}
+              />
+              <span className="text-sm text-gray-600">
+                Menu lateral usando Sheet do shadcn
+              </span>
+            </div>
           </CardContent>
         </Card>
 

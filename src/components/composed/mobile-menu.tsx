@@ -1,12 +1,18 @@
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger
+} from "@/components/primitives"
 import { Button } from "@/components/primitives"
 import { Menu, Home, Users, Calendar, DollarSign, Settings, LogOut } from "lucide-react"
-import { cn } from "@/lib/utils"
 
-export interface HamburgerMenuProps {
-  isOpen: boolean
-  onToggle: () => void
-  onNavigate: (route: string) => void
+export interface MobileMenuProps {
   userRole?: 'admin' | 'doctor' | 'nurse' | 'receptionist'
+  onNavigate?: (route: string) => void
   className?: string
 }
 
@@ -35,53 +41,42 @@ const menuItems = {
   ]
 }
 
-export const HamburgerMenu = ({ 
-  isOpen, 
-  onToggle, 
-  onNavigate, 
+export const MobileMenu = ({ 
   userRole = 'admin',
+  onNavigate,
   className 
-}: HamburgerMenuProps) => {
+}: MobileMenuProps) => {
   const items = menuItems[userRole] || menuItems.admin
 
   const handleItemClick = (route: string) => {
-    onNavigate(route)
-    onToggle() // Fecha o menu após navegar
+    onNavigate?.(route)
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className={cn("fixed inset-0 z-50 lg:hidden", className)}>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black/50" 
-        onClick={onToggle}
-      />
-      
-      {/* Menu */}
-      <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-lg">
-        <div className="flex h-full flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-semibold text-roxo-titulo">
-              Menu
-            </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggle}
-              className="h-8 w-8"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Navigation Items */}
-          <nav className="flex-1 overflow-y-auto p-4">
-            <ul className="space-y-2">
-              {items.map((item) => (
-                <li key={item.route}>
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={className}
+        >
+          <Menu className="h-6 w-6" />
+          <span className="sr-only">Abrir menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-80">
+        <SheetHeader>
+          <SheetTitle className="text-roxo-titulo">Menu</SheetTitle>
+          <SheetDescription>
+            Navegue pelas seções do sistema
+          </SheetDescription>
+        </SheetHeader>
+        
+        <nav className="mt-6">
+          <ul className="space-y-2">
+            {items.map((item) => (
+              <li key={item.route}>
+                <SheetClose asChild>
                   <button
                     onClick={() => handleItemClick(item.route)}
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-bege-fundo"
@@ -91,13 +86,14 @@ export const HamburgerMenu = ({
                       {item.label}
                     </span>
                   </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
+                </SheetClose>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-          {/* Footer */}
-          <div className="border-t p-4">
+        <div className="absolute bottom-6 left-6 right-6">
+          <SheetClose asChild>
             <button
               onClick={() => handleItemClick('/logout')}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-red-50"
@@ -107,11 +103,11 @@ export const HamburgerMenu = ({
                 Sair
               </span>
             </button>
-          </div>
+          </SheetClose>
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   )
 }
 
-HamburgerMenu.displayName = "HamburgerMenu" 
+MobileMenu.displayName = "MobileMenu" 

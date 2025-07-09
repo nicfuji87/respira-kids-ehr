@@ -7,10 +7,12 @@ export { StatusBadge } from "./status-badge"
 export { ActionCard } from "./action-card"
 export { SearchInput } from "./search-input"
 export { DataTable } from "./data-table"
-export { HamburgerMenu } from "./hamburger-menu"
-export { TabButton } from "./tab-button"
 export { NavigationGuard } from "./navigation-guard"
-export { BreadcrumbNav } from "./breadcrumb-nav"
+
+// Novos componentes baseados em shadcn
+export { MobileMenu } from "./mobile-menu"
+export { NavigationTabs } from "./navigation-tabs"
+export { PageBreadcrumb } from "./page-breadcrumb"
 
 // Types
 export type { FormFieldProps } from "./form-field"
@@ -19,7 +21,9 @@ export type { StatusBadgeProps } from "./status-badge"
 export type { ActionCardProps } from "./action-card"
 export type { SearchInputProps } from "./search-input"
 export type { DataTableProps } from "./data-table"
-export type { HamburgerMenuProps } from "./hamburger-menu"
-export type { TabButtonProps } from "./tab-button"
 export type { NavigationGuardProps } from "./navigation-guard"
-export type { BreadcrumbNavProps, BreadcrumbItem } from "./breadcrumb-nav" 
+
+// Novos tipos shadcn
+export type { MobileMenuProps } from "./mobile-menu"
+export type { NavigationTabsProps, NavigationTab } from "./navigation-tabs"
+export type { PageBreadcrumbProps, BreadcrumbItem } from "./page-breadcrumb" 
