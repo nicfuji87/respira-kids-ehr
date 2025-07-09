@@ -1,13 +1,18 @@
 import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  Input,
+  Form
 } from "@/components/primitives"
 import { 
-  FormField,
+  FormFieldWrapper,
   ActionMenu,
   StatusBadge,
   ActionCard,
@@ -28,12 +33,29 @@ import {
   Copy,
 } from "lucide-react"
 
+// Schema de validação para demonstração
+const formSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.string().email("Email inválido")
+})
+
+type FormData = z.infer<typeof formSchema>
+
 export const ComponentsComposed = () => {
   const [searchValue, setSearchValue] = useState("")
-  const [formData, setFormData] = useState({
-    name: "",
-    email: ""
+
+  // React Hook Form setup
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: ""
+    }
   })
+
+  const onSubmit = (data: FormData) => {
+    console.log("Form submitted:", data)
+  }
 
   const sampleData = [
     { id: 1, name: "João Silva", email: "joao@email.com", status: "active" },
@@ -141,44 +163,56 @@ export const ComponentsComposed = () => {
           </CardContent>
         </Card>
 
-        {/* Form Fields */}
+        {/* Modern Form Fields (react-hook-form + shadcn) */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-roxo-titulo">Form Fields</CardTitle>
+            <CardTitle className="text-roxo-titulo">Form Fields (Modern - react-hook-form + shadcn)</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                label="Nome Completo"
-                htmlFor="name"
-                required
-              >
-                <input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-azul-respira"
-                  placeholder="Digite seu nome"
-                />
-              </FormField>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormFieldWrapper
+                    control={form.control}
+                    name="name"
+                    label="Nome Completo"
+                    required
+                  >
+                    {(field) => (
+                      <Input
+                        {...field}
+                        placeholder="Digite seu nome"
+                        className="w-full"
+                      />
+                    )}
+                  </FormFieldWrapper>
 
-              <FormField
-                label="Email"
-                htmlFor="email"
-                error={formData.email && !formData.email.includes('@') ? 'Email inválido' : ''}
-                required
-              >
-                <input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-azul-respira"
-                  placeholder="Digite seu email"
-                />
-              </FormField>
-            </div>
+                  <FormFieldWrapper
+                    control={form.control}
+                    name="email"
+                    label="Email"
+                    description="Será usado para notificações"
+                    required
+                  >
+                    {(field) => (
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="Digite seu email"
+                        className="w-full"
+                      />
+                    )}
+                  </FormFieldWrapper>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button type="submit">Enviar</Button>
+                  <Button type="button" variant="outline" onClick={() => form.reset()}>
+                    Limpar
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </CardContent>
         </Card>
 
@@ -270,7 +304,6 @@ export const ComponentsComposed = () => {
             <NavigationTabs
               tabs={navigationTabs}
               defaultValue="dashboard"
-              onTabChange={(value) => console.log('Tab changed to:', value)}
             />
           </CardContent>
         </Card>
