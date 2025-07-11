@@ -1,4 +1,5 @@
-# 🩺 Respira KIDS EHR — Especificações para Desenvolvimento com IA
+# 🩺 Respira KIDS EHR — Especificações para Desenvolvimento com IA (stack → Vite + React 18, TypeScript strict, Tailwind CSS, Supabase, shadcn, Cursor Windows).
+
 
 **Sistema de Prontuário Eletrônico Inteligente para Fisioterapia Respiratória Pediátrica**
 
@@ -524,6 +525,49 @@ export const COMPONENT_REGISTRY = {
     }
   }
 };
+
+🏗️ Arquitetura Hierárquica (4 Níveis)
+Nível 1: Primitivos (src/components/primitives/)
+Componentes básicos reutilizáveis baseados em shadcn/ui
+Função: Elementos básicos da UI (botões, inputs, cards, etc.)
+Baseado em: shadcn/ui com customizações tema RespiraKids
+Características:
+CSS variables personalizadas (--azul-respira, --roxo-titulo, etc.)
+Touch targets mínimos de 44px (mobile-friendly)
+Variantes adaptadas ao tema RespiraKids
+Transições suaves (theme-transition)
+Exemplos:
+Apply to README.md
+Nível 2: Compostos (src/components/composed/)
+Componentes que combinam primitivos para funcionalidades específicas
+Função: Combinam primitivos para criar funcionalidades reutilizáveis
+Características:
+Integração com react-hook-form
+Lógica de negócio genérica
+Estilização consistente
+Reutilizáveis em qualquer domínio
+Exemplos:
+Apply to README.md
+Nível 3: Domínio (src/components/domain/)
+Componentes específicos do negócio organizados por área
+Função: Componentes específicos para cada área de negócio
+Organização por pastas:
+auth/ - Autenticação
+patient/ - Pacientes
+appointment/ - Agendamentos
+financial/ - Financeiro
+config/ - Configurações
+dashboard/ - Dashboard
+Exemplos:
+Apply to README.md
+Nível 4: Templates (src/components/templates/)
+Layouts e estruturas de página completas
+Função: Estruturas de página e layouts responsivos
+Características:
+Layout responsivo
+Estrutura de navegação
+Containers de conteúdo
+
 
 ```css
 /* src/index.css - TEMA RESPIRA KIDS PARA SHADCN */

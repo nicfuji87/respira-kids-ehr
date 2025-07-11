@@ -7,6 +7,9 @@
  * - Domain: Componentes específicos do domínio EHR
  * - Templates: Layouts e estruturas de página
  * 
+ * AI dev note: Após simplificação do sistema, apenas auth, primitives, composed e templates
+ * estão implementados. Outras seções domain são funcionalidades planejadas para desenvolvimento futuro.
+ * 
  * @example
  * ```typescript
  * import { findComponent, COMPONENT_REGISTRY } from 'src/components/_registry/component-map'
@@ -160,7 +163,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
       description: 'Campo de busca com ícone e filtros',
       path: 'src/components/composed/SearchInput',
       dependencies: ['Input', 'Button'],
-      examples: ['<SearchInput placeholder="Buscar pacientes..." />'],
+      examples: ['<SearchInput placeholder="Buscar..." />'],
       version: '1.0.0'
     },
     DataTable: {
@@ -170,7 +173,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
       description: 'Tabela com paginação e ordenação',
       path: 'src/components/composed/DataTable',
       dependencies: ['Button', 'Badge'],
-      examples: ['<DataTable data={patients} columns={columns} />'],
+      examples: ['<DataTable data={data} columns={columns} />'],
       version: '1.0.0'
     },
     StatusIndicator: {
@@ -190,7 +193,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
       description: 'Menu de ações contextuais',
       path: 'src/components/composed/ActionMenu',
       dependencies: ['Button', 'Modal'],
-      examples: ['<ActionMenu actions={patientActions} />'],
+      examples: ['<ActionMenu actions={itemActions} />'],
       version: '1.0.0'
     }
   },
@@ -234,7 +237,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
         name: 'PatientCard',
         category: 'domain',
         level: 'intermediate',
-        description: 'Card com informações do paciente',
+        description: 'Card com informações do paciente (funcionalidade planejada)',
         path: 'src/components/domain/patient/PatientCard',
         dependencies: ['Card', 'Avatar', 'Badge'],
         examples: ['<PatientCard patient={patientData} />'],
@@ -244,7 +247,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
         name: 'PatientForm',
         category: 'domain',
         level: 'advanced',
-        description: 'Formulário de cadastro de paciente',
+        description: 'Formulário de cadastro de paciente (funcionalidade planejada)',
         path: 'src/components/domain/patient/PatientForm',
         dependencies: ['FormField', 'Button'],
         examples: ['<PatientForm onSubmit={handlePatientSubmit} />'],
@@ -254,7 +257,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
         name: 'PatientList',
         category: 'domain',
         level: 'advanced',
-        description: 'Lista de pacientes com filtros',
+        description: 'Lista de pacientes com filtros (funcionalidade planejada)',
         path: 'src/components/domain/patient/PatientList',
         dependencies: ['DataTable', 'SearchInput'],
         examples: ['<PatientList patients={patients} />'],
@@ -264,7 +267,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
         name: 'MedicalHistory',
         category: 'domain',
         level: 'advanced',
-        description: 'Histórico médico do paciente',
+        description: 'Histórico médico do paciente (funcionalidade planejada)',
         path: 'src/components/domain/patient/MedicalHistory',
         dependencies: ['Card', 'Badge'],
         examples: ['<MedicalHistory patientId={123} />'],
@@ -276,7 +279,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
         name: 'AppointmentCard',
         category: 'domain',
         level: 'intermediate',
-        description: 'Card de agendamento',
+        description: 'Card de agendamento (funcionalidade planejada)',
         path: 'src/components/domain/appointment/AppointmentCard',
         dependencies: ['Card', 'StatusIndicator'],
         examples: ['<AppointmentCard appointment={appointmentData} />'],
@@ -286,7 +289,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
         name: 'AppointmentForm',
         category: 'domain',
         level: 'advanced',
-        description: 'Formulário de agendamento',
+        description: 'Formulário de agendamento (funcionalidade planejada)',
         path: 'src/components/domain/appointment/AppointmentForm',
         dependencies: ['FormField', 'Button'],
         examples: ['<AppointmentForm onSubmit={handleAppointment} />'],
@@ -296,7 +299,7 @@ export const COMPONENT_REGISTRY: ComponentRegistry = {
         name: 'Calendar',
         category: 'domain',
         level: 'advanced',
-        description: 'Calendário de agendamentos',
+        description: 'Calendário de agendamentos (funcionalidade planejada)',
         path: 'src/components/domain/appointment/Calendar',
         dependencies: ['Card', 'Button'],
         examples: ['<Calendar appointments={appointments} />'],

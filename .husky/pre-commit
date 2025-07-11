@@ -1,0 +1,39 @@
+#!/usr/bin/env sh
+# AI dev note: Pre-commit hook para garantir qualidade e segurança
+
+echo "🔍 Executando verificações pre-commit..."
+
+# 1. Verificar se existem credenciais expostas
+echo "🔐 Verificando credenciais expostas..."
+if grep -r "VITE_.*SECRET" src/ 2>/dev/null; then
+  echo "❌ ERRO: Credenciais secretas encontradas no código frontend!"
+  echo "Remova qualquer VITE_*_SECRET do código antes de fazer commit."
+  exit 1
+fi
+
+# 2. Type check
+echo "🔧 Verificando tipos TypeScript..."
+npm run type-check
+if [ $? -ne 0 ]; then
+  echo "❌ ERRO: Falhas na verificação de tipos!"
+  exit 1
+fi
+
+# 3. Lint
+echo "📝 Verificando lint..."
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ ERRO: Falhas no lint!"
+  echo "Execute 'npm run lint -- --fix' para corrigir automaticamente."
+  exit 1
+fi
+
+# 4. Verificar se o build funciona
+echo "🔨 Testando build..."
+npm run build
+if [ $? -ne 0 ]; then
+  echo "❌ ERRO: Falha no build!"
+  exit 1
+fi
+
+echo "✅ Todas as verificações passaram! Commit liberado." 

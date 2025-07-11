@@ -218,7 +218,7 @@ export const AppointmentForm = ({
             >
               <Select
                 value={formData.type}
-                onValueChange={(value) => handleChange('type', value as any)}
+                onValueChange={(value) => handleChange('type', value as AppointmentFormData['type'])}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo" />

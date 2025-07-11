@@ -7,7 +7,7 @@ import {
   FormDescription
 } from "@/components/primitives"
 import { cn } from "@/lib/utils"
-import type { Control, FieldPath, FieldValues } from "react-hook-form"
+import type { Control, FieldPath, FieldValues, ControllerRenderProps } from "react-hook-form"
 
 export interface FormFieldWrapperProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -19,7 +19,7 @@ export interface FormFieldWrapperProps<
   description?: string
   required?: boolean
   className?: string
-  children: (field: any) => React.ReactNode
+  children: (field: ControllerRenderProps<TFieldValues, TName>) => React.ReactNode
 }
 
 export const FormFieldWrapper = <

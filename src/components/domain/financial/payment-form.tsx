@@ -127,7 +127,7 @@ export const PaymentForm = ({
           >
             <Select
               value={formData.method}
-              onValueChange={(value) => handleChange('method', value as any)}
+              onValueChange={(value) => handleChange('method', value as PaymentFormData['method'])}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o método" />

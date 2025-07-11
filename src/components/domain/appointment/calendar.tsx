@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle, Button } from "@/components/primitives"
 import { AppointmentCard } from "./appointment-card"
 import type { Appointment } from "./appointment-card"
@@ -61,16 +61,16 @@ export const Calendar = ({
     return days
   }
 
-  const getAppointmentsForDate = (date: Date) => {
+  const getAppointmentsForDate = useCallback((date: Date) => {
     const dateString = date.toISOString().split('T')[0]
     return appointments.filter(appointment => 
       appointment.date === dateString
     )
-  }
+  }, [appointments])
 
   const getDayAppointments = useMemo(() => {
     return getAppointmentsForDate(currentDate)
-  }, [appointments, currentDate])
+  }, [currentDate, getAppointmentsForDate])
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate)

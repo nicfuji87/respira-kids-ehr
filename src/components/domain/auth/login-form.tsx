@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from "@/components/primitives"
 import { FormField } from "@/components/composed"
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/hooks/auth/useAuth"
 import { Eye, EyeOff } from "lucide-react"
 
 export interface LoginFormProps {
@@ -18,7 +18,7 @@ export const LoginForm = ({ onSuccess, className }: LoginFormProps) => {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   
-  const { login } = useAuth()
+  const { signInWithEmail } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,12 +26,9 @@ export const LoginForm = ({ onSuccess, className }: LoginFormProps) => {
     setErrors({})
 
     try {
-      await login({
-        email: formData.email,
-        password: formData.password
-      })
+      await signInWithEmail(formData.email, formData.password)
       onSuccess?.()
-    } catch (error) {
+    } catch {
       setErrors({
         general: 'Email ou senha incorretos'
       })

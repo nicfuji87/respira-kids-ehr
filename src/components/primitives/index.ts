@@ -2,7 +2,8 @@
 // Componentes básicos reutilizáveis baseados em shadcn/ui
 
 // Form Components
-export { Button, buttonVariants } from "./button"
+export { Button } from "./button"
+export { buttonVariants } from "./button.variants"
 export { Input } from "./input"
 export { Label } from "./label"
 export { 
@@ -12,8 +13,7 @@ export {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
-  useFormField
+  FormMessage
 } from "./form"
 
 // Layout Components
@@ -27,9 +27,10 @@ export {
 } from "./card"
 
 // Feedback Components
-export { Badge, badgeVariants } from "./badge"
+export { Badge } from "./badge"
+export { badgeVariants } from "./badge.variants"
 export { Alert, AlertDescription, AlertTitle } from "./alert"
-export { Spinner } from "./ui/spinner"
+export { Spinner } from "./spinner"
 
 // Overlay Components
 export { 
@@ -56,7 +57,7 @@ export {
   SheetPortal,
   SheetTitle,
   SheetTrigger
-} from "./ui/sheet"
+} from "./sheet"
 
 // Navigation Components
 export {
@@ -93,7 +94,7 @@ export {
   TabsContent,
   TabsList,
   TabsTrigger
-} from "./ui/tabs"
+} from "./tabs"
 export {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -102,7 +103,7 @@ export {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator
-} from "./ui/breadcrumb"
+} from "./breadcrumb"
 
 // Media Components
 export { Avatar, AvatarFallback, AvatarImage } from "./avatar"

@@ -1,8 +1,9 @@
 import * as React from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "@/contexts/AuthContext"
-import { FullScreenLoading } from "@/pages/Loading"
-import { NotFound } from "@/pages/NotFound"
+import { useAuth } from "@/hooks/auth/useAuth"
+import FullScreenLoading from "@/pages/common/Loading"
+import NotFound from "@/pages/common/NotFound"
 import "@/index.css"
 
 // ==================== ERROR BOUNDARY ====================
@@ -59,7 +60,7 @@ class ErrorBoundary extends React.Component<
               Tentar Novamente
             </button>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details className="mt-4 p-4 bg-zinc-100 rounded-md text-left">
                 <summary className="font-medium text-zinc-900 cursor-pointer">
                   Detalhes do erro (desenvolvimento)
@@ -82,48 +83,23 @@ class ErrorBoundary extends React.Component<
 
 // ==================== LAZY LOADED COMPONENTS ====================
 
-// Componente placeholder para páginas em desenvolvimento
-const PlaceholderPage: React.FC<{ pageName: string }> = ({ pageName }) => (
-  <div className="min-h-screen bg-gradient-to-br from-[hsl(var(--bege-fundo))] to-white flex flex-col items-center justify-center px-4 py-8">
-    <div className="max-w-md w-full text-center space-y-6">
-      <div className="w-16 h-16 mx-auto bg-[hsl(var(--azul-respira))]/10 rounded-full flex items-center justify-center">
-        <svg className="w-8 h-8 text-[hsl(var(--azul-respira))]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
-      </div>
-      <div className="space-y-3">
-        <h1 className="text-2xl font-bold text-[hsl(var(--roxo-titulo))]">
-          {pageName}
-        </h1>
-        <p className="text-base text-zinc-600">
-          Esta página está em desenvolvimento e será implementada em breve.
-        </p>
-      </div>
-      <div className="flex gap-1 justify-center">
-        <div className="w-2 h-2 bg-[hsl(var(--azul-respira))] rounded-full animate-respira-pulse"></div>
-        <div className="w-2 h-2 bg-[hsl(var(--verde-pipa))] rounded-full animate-respira-pulse" style={{ animationDelay: '0.2s' }}></div>
-        <div className="w-2 h-2 bg-[hsl(var(--amarelo-pipa))] rounded-full animate-respira-pulse" style={{ animationDelay: '0.4s' }}></div>
-      </div>
-    </div>
-  </div>
-)
 
-// Função helper para criar lazy components com fallback
-const createLazyPage = (pagePath: string, pageName: string) => 
-  React.lazy(async () => {
-    try {
-      return await import(/* @vite-ignore */ pagePath)
-    } catch {
-      return { default: () => <PlaceholderPage pageName={pageName} /> }
-    }
-  })
+
+
 
 // Páginas principais que serão carregadas sob demanda
-const HomePage = createLazyPage("@/pages/HomePage", "Página Inicial")
-const LoginPage = createLazyPage("@/pages/LoginPage", "Login")
-const DashboardPage = createLazyPage("@/pages/DashboardPage", "Dashboard")
-const ComponentsPreview = React.lazy(() => import("@/pages/ComponentsPreview"))
-const ComponentsComposed = React.lazy(() => import("@/pages/ComponentsComposed"))
+const DashboardRouter = React.lazy(() => import("@/pages/dashboard/DashboardRouter"))
+
+// Páginas de autenticação (já implementadas)
+const LoginPage = React.lazy(() => import("@/pages/auth/LoginPage"))
+const RegisterPage = React.lazy(() => import("@/pages/auth/RegisterPage"))
+const ResetPasswordPage = React.lazy(() => import("@/pages/auth/ResetPasswordPage"))
+const AwaitingApprovalPage = React.lazy(() => import("@/pages/auth/AwaitingApprovalPage"))
+const CompleteRegistrationPage = React.lazy(() => import("@/pages/auth/CompleteRegistrationPage"))
+const CallbackPage = React.lazy(() => import("@/pages/auth/CallbackPage"))
+
+// Páginas administrativas
+const UserApprovalPage = React.lazy(() => import("@/pages/admin/UserApprovalPage"))
 
 // ==================== PROTECTED ROUTE COMPONENT ====================
 
@@ -136,13 +112,10 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   requireAuth = true, 
-  redirectTo = "/login" 
+  redirectTo = "/auth/login" 
 }) => {
-  // TODO: Implementar lógica de proteção usando useAuth
-  // const { isAuthenticated } = useAuth()
-  
-  // Por enquanto, permite acesso a todas as rotas (placeholder)
-  const isAuthenticated = false // Será substituído pela lógica real
+  // AI dev note: Autenticação real implementada com Supabase e RLS
+  const { isAuthenticated } = useAuth()
 
   if (requireAuth && !isAuthenticated) {
     return <Navigate to={redirectTo} replace />
@@ -151,59 +124,106 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   return <>{children}</>
 }
 
+// ==================== ROOT REDIRECT COMPONENT ====================
+
+const RootRedirect: React.FC = () => {
+  // AI dev note: Redirecionamento baseado em estado real de autenticação Supabase
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return <FullScreenLoading message="Verificando autenticação..." />
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return <Navigate to="/auth/login" replace />
+}
+
 // ==================== MAIN APP COMPONENT ====================
 
 const AppRoutes: React.FC = () => {
   return (
     <React.Suspense fallback={<FullScreenLoading message="Carregando aplicação..." />}>
       <Routes>
-        {/* Rota pública - Home */}
+        {/* Rota raiz - Redirecionamento baseado em autenticação */}
         <Route 
           path="/" 
-          element={
-            <React.Suspense fallback={<FullScreenLoading message="Carregando página inicial..." />}>
-              <HomePage />
-            </React.Suspense>
-          } 
+          element={<RootRedirect />} 
         />
 
-        {/* Rota pública - Login */}
+        {/* Rotas de autenticação */}
         <Route 
-          path="/login" 
+          path="/auth/login" 
           element={
             <React.Suspense fallback={<FullScreenLoading message="Carregando login..." />}>
               <LoginPage />
             </React.Suspense>
           } 
         />
-
-        {/* Rota de desenvolvimento - Visualização de Componentes */}
         <Route 
-          path="/components" 
+          path="/auth/register" 
           element={
-            <React.Suspense fallback={<FullScreenLoading message="Carregando componentes..." />}>
-              <ComponentsPreview />
+            <React.Suspense fallback={<FullScreenLoading message="Carregando cadastro..." />}>
+              <RegisterPage />
+            </React.Suspense>
+          } 
+        />
+        <Route 
+          path="/auth/reset-password" 
+          element={
+            <React.Suspense fallback={<FullScreenLoading message="Carregando recuperação..." />}>
+              <ResetPasswordPage />
+            </React.Suspense>
+          } 
+        />
+        <Route 
+          path="/auth/awaiting-approval" 
+          element={
+            <React.Suspense fallback={<FullScreenLoading message="Carregando..." />}>
+              <AwaitingApprovalPage />
+            </React.Suspense>
+          } 
+        />
+        <Route 
+          path="/auth/complete-registration" 
+          element={
+            <React.Suspense fallback={<FullScreenLoading message="Carregando..." />}>
+              <CompleteRegistrationPage />
+            </React.Suspense>
+          } 
+        />
+        <Route 
+          path="/auth/callback" 
+          element={
+            <React.Suspense fallback={<FullScreenLoading message="Processando login..." />}>
+              <CallbackPage />
             </React.Suspense>
           } 
         />
 
-        {/* Rota de desenvolvimento - Componentes Compostos */}
-        <Route 
-          path="/components-composed" 
-          element={
-            <React.Suspense fallback={<FullScreenLoading message="Carregando componentes compostos..." />}>
-              <ComponentsComposed />
-            </React.Suspense>
-          } 
-        />
 
-        {/* Rotas protegidas */}
+
+        {/* Rotas protegidas - Dashboard */}
         <Route 
           path="/dashboard" 
           element={
             <ProtectedRoute>
               <React.Suspense fallback={<FullScreenLoading message="Carregando dashboard..." />}>
-                <DashboardPage />
+                <DashboardRouter />
+              </React.Suspense>
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Rotas protegidas - Administrativas */}
+        <Route 
+          path="/admin/users" 
+          element={
+            <ProtectedRoute>
+              <React.Suspense fallback={<FullScreenLoading message="Carregando usuários..." />}>
+                <UserApprovalPage />
               </React.Suspense>
             </ProtectedRoute>
           } 
@@ -212,6 +232,9 @@ const AppRoutes: React.FC = () => {
         {/* Redirecionamentos */}
         <Route path="/app" element={<Navigate to="/dashboard" replace />} />
         <Route path="/home" element={<Navigate to="/" replace />} />
+        <Route path="/login" element={<Navigate to="/auth/login" replace />} />
+        <Route path="/register" element={<Navigate to="/auth/register" replace />} />
+        <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
 
         {/* Página 404 */}
         <Route path="*" element={<NotFound />} />
@@ -225,7 +248,12 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter 
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
         <AuthProvider>
           <div className="respira-kids-app">
             {/* Container principal da aplicação */}

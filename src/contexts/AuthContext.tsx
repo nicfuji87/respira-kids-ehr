@@ -1,76 +1,15 @@
-import * as React from "react"
-
-// ==================== TYPES ====================
-
-export type UserRole = 'admin' | 'doctor' | 'nurse' | 'receptionist' | 'patient'
-
-export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending'
-
-export interface User {
-  id: string
-  email: string
-  name: string
-  role: UserRole
-  status: UserStatus
-  avatar?: string
-  phone?: string
-  createdAt: string
-  updatedAt: string
-  lastLoginAt?: string
-  permissions: string[]
-  profile: {
-    firstName: string
-    lastName: string
-    cpf?: string
-    birthDate?: string
-    address?: {
-      street: string
-      number: string
-      city: string
-      state: string
-      zipCode: string
-    }
-  }
-}
-
-export interface LoginCredentials {
-  email: string
-  password: string
-  rememberMe?: boolean
-}
-
-export interface AuthState {
-  user: User | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  error: string | null
-  lastActivity: Date | null
-}
-
-export interface AuthMethods {
-  login: (credentials: LoginCredentials) => Promise<void>
-  logout: () => Promise<void>
-  refreshToken: () => Promise<void>
-  updateProfile: (updates: Partial<User['profile']>) => Promise<void>
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>
-  resetPassword: (email: string) => Promise<void>
-  clearError: () => void
-}
-
-export interface AuthHelpers {
-  hasRole: (role: UserRole | UserRole[]) => boolean
-  hasPermission: (permission: string | string[]) => boolean
-  isActive: () => boolean
-  canAccess: (requiredRoles?: UserRole[], requiredPermissions?: string[]) => boolean
-  getUserInitials: () => string
-  getFullName: () => string
-}
-
-export interface AuthContextValue extends AuthState, AuthMethods, AuthHelpers {}
-
-// ==================== CONTEXT ====================
-
-const AuthContext = React.createContext<AuthContextValue | null>(null)
+import React from 'react'
+import { supabase } from '@/lib/supabase'
+import type { User as SupabaseUser, AuthError } from '@supabase/supabase-js'
+import { ROLES } from '@/config/constants/auth.constants'
+import { 
+  type User, 
+  type UserRole, 
+  type AuthState, 
+  type AuthContextValue,
+  getRolePermissions,
+  AuthContext 
+} from './auth.utils'
 
 // ==================== PROVIDER ====================
 
@@ -83,124 +22,286 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   const [state, setState] = React.useState<AuthState>({
     user: null,
+    person: null,
     isAuthenticated: false,
     isLoading: true,
     error: null,
-    lastActivity: null
+    lastActivity: null,
+    role: null,
+    profileComplete: false,
+    isApproved: false
   })
 
-  // ==================== METHODS ====================
+  // ==================== HELPER FUNCTIONS ====================
 
-  const login = React.useCallback(async (credentials: LoginCredentials): Promise<void> => {
+  const fetchUserProfile = React.useCallback(async (userId: string): Promise<void> => {
+    try {
+      const { data, error } = await supabase
+        .from('pessoas')
+        .select(`
+          *,
+          tipo_pessoa:pessoa_tipos(*)
+        `)
+        .eq('auth_user_id', userId)
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      if (data) {
+        const user: User = {
+          id: data.id,
+          email: data.email || '',
+          name: data.nome || '',
+          role: data.role || ROLES.PROFISSIONAL,
+          status: data.is_approved ? 'ativo' : 'pending',
+          approvedAt: data.is_approved ? data.updated_at : undefined,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+          lastLoginAt: new Date().toISOString(),
+          permissions: getRolePermissions(data.role || ROLES.PROFISSIONAL),
+          profile: {
+            firstName: data.nome ? data.nome.split(' ')[0] : '',
+            lastName: data.nome ? data.nome.split(' ').slice(1).join(' ') : '',
+            cpfCnpj: data.cpf_cnpj
+          }
+        }
+
+        setState(prev => ({
+          ...prev,
+          user,
+          person: data,
+          isAuthenticated: true,
+          isLoading: false,
+          lastActivity: new Date(),
+          role: data.role || ROLES.PROFISSIONAL,
+          profileComplete: data.profile_complete || false,
+          isApproved: data.is_approved || false
+        }))
+      }
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar perfil'
+      }))
+    }
+  }, [])
+
+  const createUserProfile = React.useCallback(async (supabaseUser: SupabaseUser, nome: string): Promise<void> => {
+    try {
+      const { data: tipoProfissional } = await supabase
+        .from('pessoa_tipos')
+        .select('id')
+        .eq('codigo', 'profissional')
+        .single()
+
+      const { error } = await supabase
+        .from('pessoas')
+        .insert({
+          auth_user_id: supabaseUser.id,
+          nome: nome,
+          email: supabaseUser.email!,
+          id_tipo_pessoa: tipoProfissional?.id,
+          role: ROLES.PROFISSIONAL,
+          is_approved: false,
+          profile_complete: false
+        })
+
+      if (error) {
+        throw error
+      }
+
+      await fetchUserProfile(supabaseUser.id)
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao criar perfil'
+      }))
+    }
+  }, [fetchUserProfile])
+
+  const signInWithEmail = React.useCallback(async (email: string, password: string): Promise<void> => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
     
     try {
-      // TODO: Implementar lógica real de login
-      // Por enquanto, simula um login com delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock user - será substituído pela resposta real da API
-      const mockUser: User = {
-        id: '1',
-        email: credentials.email,
-        name: 'Dr. João Silva',
-        role: 'doctor',
-        status: 'active',
-        avatar: undefined,
-        phone: '(11) 99999-9999',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString(),
-        permissions: ['read:patients', 'write:patients', 'read:appointments', 'write:appointments'],
-        profile: {
-          firstName: 'João',
-          lastName: 'Silva',
-          cpf: '123.456.789-00',
-          birthDate: '1980-01-01',
-          address: {
-            street: 'Rua das Flores',
-            number: '123',
-            city: 'São Paulo',
-            state: 'SP',
-            zipCode: '01234-567'
-          }
-        }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (error) {
+        throw error
       }
 
-      setState(prev => ({
-        ...prev,
-        user: mockUser,
-        isAuthenticated: true,
-        isLoading: false,
-        lastActivity: new Date()
-      }))
-
-      // TODO: Salvar token no localStorage/sessionStorage se rememberMe for true
-      console.log('Login realizado com sucesso (placeholder)')
+      if (data.user) {
+        await fetchUserProfile(data.user.id)
+      }
       
     } catch (error) {
+      const authError = error as AuthError
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao fazer login'
+        error: authError.message || 'Erro de autenticação'
+      }))
+      throw error
+    }
+  }, [fetchUserProfile])
+
+  const signInWithGoogle = React.useCallback(async (): Promise<void> => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+
+      if (error) {
+        throw error
+      }
+      
+    } catch (error) {
+      const authError = error as AuthError
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: authError.message || 'Erro de autenticação'
       }))
       throw error
     }
   }, [])
 
-  const logout = React.useCallback(async (): Promise<void> => {
+  const signUp = React.useCallback(async (email: string, password: string, nome: string): Promise<void> => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: nome,
+            role: ROLES.PROFISSIONAL,
+          }
+        }
+      })
+
+      if (error) {
+        throw error
+      }
+
+      if (data.user) {
+        await createUserProfile(data.user, nome)
+      }
+      
+    } catch (error) {
+      const authError = error as AuthError
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: authError.message || 'Erro de autenticação'
+      }))
+      throw error
+    }
+  }, [createUserProfile])
+
+  const signOut = React.useCallback(async (): Promise<void> => {
     setState(prev => ({ ...prev, isLoading: true }))
     
     try {
-      // TODO: Implementar lógica real de logout
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        throw error
+      }
       
       setState({
         user: null,
+        person: null,
         isAuthenticated: false,
         isLoading: false,
         error: null,
-        lastActivity: null
+        lastActivity: null,
+        role: null,
+        profileComplete: false,
+        isApproved: false
       })
-
-      // TODO: Remover token do storage
-      console.log('Logout realizado com sucesso (placeholder)')
       
     } catch (error) {
+      const authError = error as AuthError
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao fazer logout'
+        error: authError.message || 'Erro de autenticação'
       }))
       throw error
     }
   }, [])
 
-  const refreshToken = React.useCallback(async (): Promise<void> => {
-    // TODO: Implementar refresh do token
-    console.log('Refresh token (placeholder)')
+  const resetPassword = React.useCallback(async (email: string): Promise<void> => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
+
+      if (error) {
+        throw error
+      }
+
+      setState(prev => ({ ...prev, isLoading: false }))
+      
+    } catch (error) {
+      const authError = error as AuthError
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: authError.message || 'Erro de autenticação'
+      }))
+      throw error
+    }
   }, [])
 
-  const updateProfile = React.useCallback(async (updates: Partial<User['profile']>): Promise<void> => {
+  const updateProfile = React.useCallback(async (data: Partial<User['profile']>): Promise<void> => {
     if (!state.user) return
 
     setState(prev => ({ ...prev, isLoading: true, error: null }))
     
     try {
-      // TODO: Implementar atualização real do perfil
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const { error } = await supabase
+        .from('pessoas')
+        .update({
+          nome: data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : undefined,
+          cpf_cnpj: data.cpfCnpj,
+          profile_complete: true
+        })
+        .eq('auth_user_id', state.user.id)
+
+      if (error) {
+        throw error
+      }
       
       setState(prev => ({
         ...prev,
         user: prev.user ? {
           ...prev.user,
-          profile: { ...prev.user.profile, ...updates },
-          updatedAt: new Date().toISOString()
+          profile: { ...prev.user.profile, ...data },
+          updatedAt: new Date().toISOString(),
         } : null,
-        isLoading: false
+        isLoading: false,
+        profileComplete: true
       }))
-
-      console.log('Perfil atualizado com sucesso (placeholder)', updates)
       
     } catch (error) {
       setState(prev => ({
@@ -212,51 +313,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [state.user])
 
-  const changePassword = React.useCallback(async (_currentPassword: string, _newPassword: string): Promise<void> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }))
+  const checkProfileCompletion = React.useCallback((): boolean => {
+    if (!state.user) return false
     
-    try {
-      // TODO: Implementar mudança real de senha
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setState(prev => ({ ...prev, isLoading: false }))
-      console.log('Senha alterada com sucesso (placeholder)')
-      
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao alterar senha'
-      }))
-      throw error
-    }
-  }, [])
-
-  const resetPassword = React.useCallback(async (email: string): Promise<void> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }))
+    const { profile } = state.user
+    const { firstName, lastName, cpfCnpj } = profile
     
-    try {
-      // TODO: Implementar reset real de senha
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setState(prev => ({ ...prev, isLoading: false }))
-      console.log('Email de reset enviado com sucesso (placeholder)', email)
-      
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao enviar email de reset'
-      }))
-      throw error
-    }
-  }, [])
+    return !!(cpfCnpj && firstName && lastName)
+  }, [state.user])
 
   const clearError = React.useCallback((): void => {
     setState(prev => ({ ...prev, error: null }))
   }, [])
-
-  // ==================== HELPERS ====================
 
   const hasRole = React.useCallback((role: UserRole | UserRole[]): boolean => {
     if (!state.user) return false
@@ -273,8 +341,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [state.user])
 
   const isActive = React.useCallback((): boolean => {
-    return state.user?.status === 'active'
+    return state.user?.status === 'ativo'
   }, [state.user])
+
+  const hasCompleteProfile = React.useCallback((): boolean => {
+    return state.profileComplete
+  }, [state.profileComplete])
+
+  const getUserRole = React.useCallback((): UserRole | null => {
+    return state.role
+  }, [state.role])
 
   const canAccess = React.useCallback((
     requiredRoles?: UserRole[], 
@@ -282,12 +358,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ): boolean => {
     if (!state.isAuthenticated || !isActive()) return false
     
-    // Verificar roles se especificados
     if (requiredRoles && requiredRoles.length > 0) {
       if (!hasRole(requiredRoles)) return false
     }
     
-    // Verificar permissões se especificadas
     if (requiredPermissions && requiredPermissions.length > 0) {
       if (!hasPermission(requiredPermissions)) return false
     }
@@ -310,19 +384,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return `${state.user.profile.firstName} ${state.user.profile.lastName}`.trim()
   }, [state.user])
 
-  // ==================== EFFECTS ====================
-
-  // Inicialização do contexto - verificar se há token salvo
   React.useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          await fetchUserProfile(session.user.id)
+        } else if (event === 'SIGNED_OUT') {
+          setState({
+            user: null,
+            person: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+            lastActivity: null,
+            role: null,
+            profileComplete: false,
+            isApproved: false
+          })
+        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          await fetchUserProfile(session.user.id)
+        }
+      }
+    )
+
     const initializeAuth = async () => {
       try {
-        // TODO: Verificar se há token salvo e validá-lo
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const { data: { session } } = await supabase.auth.getSession()
         
-        setState(prev => ({ ...prev, isLoading: false }))
-        console.log('Contexto de auth inicializado (placeholder)')
-        
-      } catch (error) {
+        if (session?.user) {
+          await fetchUserProfile(session.user.id)
+        } else {
+          setState(prev => ({ ...prev, isLoading: false }))
+        }
+      } catch {
         setState(prev => ({
           ...prev,
           isLoading: false,
@@ -332,61 +426,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     initializeAuth()
-  }, [])
 
-  // Atualizar última atividade periodicamente
-  React.useEffect(() => {
-    if (!state.isAuthenticated) return
+    return () => subscription.unsubscribe()
+  }, [fetchUserProfile])
 
-    const interval = setInterval(() => {
-      setState(prev => ({ ...prev, lastActivity: new Date() }))
-    }, 60000) // A cada minuto
-
-    return () => clearInterval(interval)
-  }, [state.isAuthenticated])
-
-  // ==================== CONTEXT VALUE ====================
-
-  const contextValue: AuthContextValue = React.useMemo(() => ({
-    // State
-    user: state.user,
-    isAuthenticated: state.isAuthenticated,
-    isLoading: state.isLoading,
-    error: state.error,
-    lastActivity: state.lastActivity,
-    
-    // Methods
-    login,
-    logout,
-    refreshToken,
-    updateProfile,
-    changePassword,
+  const contextValue: AuthContextValue = {
+    ...state,
+    signInWithEmail,
+    signInWithGoogle,
+    signUp,
+    signOut,
     resetPassword,
-    clearError,
-    
-    // Helpers
-    hasRole,
-    hasPermission,
-    isActive,
-    canAccess,
-    getUserInitials,
-    getFullName
-  }), [
-    state,
-    login,
-    logout,
-    refreshToken,
     updateProfile,
-    changePassword,
-    resetPassword,
+    checkProfileCompletion,
     clearError,
     hasRole,
     hasPermission,
     isActive,
+    hasCompleteProfile,
+    getUserRole,
     canAccess,
     getUserInitials,
     getFullName
-  ])
+  }
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -395,18 +457,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   )
 }
 
-// ==================== HOOK ====================
-
-export const useAuth = (): AuthContextValue => {
-  const context = React.useContext(AuthContext)
-  
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider')
-  }
-  
-  return context
-}
-
-// ==================== EXPORTS ====================
-
-export default AuthContext 
+// Re-export types for external use
+export type { UserRole, AuthContextValue } from './auth.utils' 

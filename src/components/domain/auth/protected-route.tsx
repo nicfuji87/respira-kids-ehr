@@ -1,90 +1,55 @@
-import { useAuth } from "@/contexts/AuthContext"
-import { Spinner } from "@/components/primitives"
-import { LoginForm } from "./login-form"
-import type { UserRole } from "@/contexts/AuthContext"
+// AI dev note: Protected route domain component - usando tipos organizados
+import type { ReactNode } from "react"
+import { Navigate } from "react-router-dom"
+import { useAuth } from "@/hooks/auth/useAuth"
+import type { UserRole } from "@/config/constants/auth.constants"
 
-export interface ProtectedRouteProps {
-  children: React.ReactNode
+interface ProtectedRouteProps {
+  children: ReactNode
   requiredRoles?: UserRole[]
-  requiredPermissions?: string[]
-  fallback?: React.ReactNode
-  redirectTo?: string
-  showLogin?: boolean
+  requireApproval?: boolean
+  requireCompleteProfile?: boolean
+  fallbackPath?: string
 }
 
-export const ProtectedRoute = ({
+export default function ProtectedRoute({
   children,
   requiredRoles,
-  requiredPermissions,
-  fallback,
-  showLogin = true
-}: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, canAccess } = useAuth()
+  requireApproval = true,
+  requireCompleteProfile = false,
+  fallbackPath = "/dashboard"
+}: ProtectedRouteProps) {
+  const { 
+    isAuthenticated, 
+    isLoading, 
+    user, 
+    isApproved, 
+    profileComplete 
+  } = useAuth()
 
-  // Mostrar loading durante verificação de auth
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-bege-fundo">
-        <div className="text-center">
-          <Spinner size="lg" className="mx-auto" />
-          <p className="mt-4 text-roxo-titulo">Verificando autenticação...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-roxo-principal"></div>
       </div>
     )
   }
 
-  // Usuário não autenticado
   if (!isAuthenticated) {
-    if (fallback) {
-      return <>{fallback}</>
-    }
-    
-    if (showLogin) {
-      return (
-        <div className="flex h-screen items-center justify-center bg-bege-fundo p-4">
-          <div className="w-full max-w-md">
-            <LoginForm />
-          </div>
-        </div>
-      )
-    }
-    
-    return (
-      <div className="flex h-screen items-center justify-center bg-bege-fundo">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-roxo-titulo mb-4">
-            Acesso Negado
-          </h2>
-          <p className="text-gray-600">
-            Você precisa estar logado para acessar esta página.
-          </p>
-        </div>
-      </div>
-    )
+    return <Navigate to="/auth/login" replace />
   }
 
-  // Verificar permissões específicas
-  if (!canAccess(requiredRoles, requiredPermissions)) {
-    if (fallback) {
-      return <>{fallback}</>
-    }
-    
-    return (
-      <div className="flex h-screen items-center justify-center bg-bege-fundo">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-roxo-titulo mb-4">
-            Acesso Negado
-          </h2>
-          <p className="text-gray-600">
-            Você não tem permissão para acessar esta página.
-          </p>
-        </div>
-      </div>
-    )
+  if (requireApproval && !isApproved) {
+    return <Navigate to="/auth/awaiting-approval" replace />
   }
 
-  // Usuário autenticado e com permissões adequadas
+  if (requireCompleteProfile && !profileComplete) {
+    return <Navigate to="/auth/complete-registration" replace />
+  }
+
+  if (requiredRoles && user?.role && !requiredRoles.includes(user.role)) {
+    return <Navigate to={fallbackPath} replace />
+  }
+
   return <>{children}</>
-}
-
-ProtectedRoute.displayName = "ProtectedRoute" 
+} 
